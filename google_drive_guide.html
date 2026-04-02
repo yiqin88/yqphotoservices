@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Share Your Google Drive Folder – YQ Photo Services</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background:#f5f3f0; color:#2d2d2d; }
+
+  .header { background:linear-gradient(135deg,#1a1a2e,#2d2d4a); color:white; padding:32px 24px; text-align:center; border-bottom:4px solid #00d4ff; }
+  .header h1 { font-size:22px; font-weight:700; letter-spacing:0.5px; margin-bottom:8px; }
+  .header p { font-size:13px; opacity:0.85; }
+
+  .container { max-width:680px; margin:0 auto; padding:24px 16px 48px; }
+
+  .intro { background:white; border-radius:12px; padding:20px; margin-bottom:24px; border-left:4px solid #00d4ff; box-shadow:0 2px 8px rgba(0,0,0,0.06); font-size:14px; line-height:1.7; color:#444; }
+
+  .step-card { background:white; border-radius:12px; padding:20px 20px 24px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.07); }
+  .step-header { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .step-num { width:38px; height:38px; border-radius:50%; background:#1a1a2e; color:white; font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-title { font-size:16px; font-weight:700; color:#1a1a2e; }
+  .step-sub { font-size:12px; color:#888; margin-top:2px; }
+
+  .step-body { font-size:13px; color:#444; line-height:1.8; }
+  .step-body b { color:#1a1a2e; }
+
+  /* Illustrated mockup boxes */
+  .mockup { border:2px solid #e0e0e0; border-radius:10px; overflow:hidden; margin:14px 0; background:#fafaf8; }
+  .mockup-bar { background:#e8e8e8; padding:8px 14px; font-size:11px; color:#888; display:flex; align-items:center; gap:6px; }
+  .mockup-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .mockup-body { padding:16px; }
+
+  .gdrive-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; background:white; border:1px solid #eee; margin-bottom:8px; font-size:13px; cursor:default; }
+  .gdrive-item:hover { background:#f0f7ff; }
+  .folder-icon { font-size:22px; }
+  .gdrive-item-name { font-weight:600; color:#1a1a2e; }
+  .gdrive-item-date { font-size:11px; color:#888; margin-left:auto; }
+
+  .context-menu { background:white; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.12); padding:6px 0; width:200px; font-size:13px; }
+  .menu-item { padding:9px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; }
+  .menu-item:hover { background:#f0f7ff; }
+  .menu-item.highlight { color:#1a73e8; font-weight:600; }
+  .menu-item.highlight:hover { background:#e8f0fe; }
+
+  .share-dialog { border:1px solid #ddd; border-radius:10px; background:white; padding:20px; font-size:13px; }
+  .share-title { font-size:16px; font-weight:700; margin-bottom:14px; color:#1a1a2e; }
+  .share-link-box { background:#f8f8f8; border:1px solid #ddd; border-radius:6px; padding:10px 12px; font-size:12px; color:#555; margin-bottom:14px; word-break:break-all; }
+
+  .access-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid #eee; }
+  .globe-icon { font-size:22px; }
+  .access-label { flex:1; }
+  .access-label b { display:block; color:#1a1a2e; }
+  .access-label span { font-size:11px; color:#888; }
+  .dropdown-fake { background:#1a73e8; color:white; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; }
+
+  .highlight-box { background:#e8f4e8; border:1.5px solid #4a7c59; border-radius:8px; padding:12px 14px; font-size:13px; color:#2a4a2a; margin:12px 0; display:flex; gap:10px; align-items:flex-start; }
+  .warning-box { background:#fff8e8; border:1.5px solid #d4a574; border-radius:8px; padding:12px 14px; font-size:13px; color:#7a5a1e; margin:12px 0; display:flex; gap:10px; align-items:flex-start; }
+
+  .copy-btn { background:#1a73e8; color:white; border:none; padding:8px 18px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; margin-top:8px; }
+
+  .final-box { background:linear-gradient(135deg,#1a1a2e,#2d2d4a); color:white; border-radius:12px; padding:24px; text-align:center; margin-top:28px; }
+  .final-box h3 { font-size:18px; margin-bottom:10px; }
+  .final-box p { font-size:13px; opacity:0.85; line-height:1.7; }
+
+  @media print {
+    body { background:white; }
+    .container { padding:0; }
+    .step-card { box-shadow:none; border:1px solid #ddd; break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📂 How to Share Your Google Drive Folder</h1>
+  <p>YQ Photo Services — Step-by-step guide for customers</p>
+</div>
+
+<div class="container">
+
+  <div class="intro">
+    When placing your order, you'll need to upload your photos to Google Drive and share the folder link with us. Follow these steps to make sure we can access your photos! 📸
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Open Google Drive</div>
+        <div class="step-sub">On your phone or computer</div>
+      </div>
+    </div>
+    <div class="step-body">
+      Go to <b>drive.google.com</b> or open the <b>Google Drive app</b> on your phone.<br><br>
+      Sign in with your Google account if prompted.
+    </div>
+    <div class="mockup" style="margin-top:14px;">
+      <div class="mockup-bar">
+        <span class="mockup-dot" style="background:#ff5f57;"></span>
+        <span class="mockup-dot" style="background:#febc2e;"></span>
+        <span class="mockup-dot" style="background:#28c840;"></span>
+        <span style="margin-left:8px;">drive.google.com</span>
+      </div>
+      <div class="mockup-body">
+        <div style="font-weight:700; font-size:14px; color:#1a1a2e; margin-bottom:10px;">📂 My Drive</div>
+        <div class="gdrive-item"><span class="folder-icon">📁</span><span class="gdrive-item-name">Holiday Photos</span><span class="gdrive-item-date">Today</span></div>
+        <div class="gdrive-item" style="background:#e8f0fe; border-color:#1a73e8;"><span class="folder-icon">📁</span><span class="gdrive-item-name" style="color:#1a73e8;">YQ Print Order</span><span class="gdrive-item-date">Today</span></div>
+        <div class="gdrive-item"><span class="folder-icon">📁</span><span class="gdrive-item-name">Documents</span><span class="gdrive-item-date">Yesterday</span></div>
+      </div>
+    </div>
+    <div class="highlight-box">✅ <div>Create a <b>new folder</b> specifically for your print order to keep things organised.</div></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Upload your photos to the folder</div>
+        <div class="step-sub">Add all photos you want printed</div>
+      </div>
+    </div>
+    <div class="step-body">
+      Open the folder → tap <b>+ New</b> (computer) or the <b>+ button</b> (phone) → select <b>Upload files</b> → choose all your photos.
+      <br><br>
+      Wait for all uploads to finish before proceeding.
+    </div>
+    <div class="warning-box">⚠️ <div>Make sure all photos are <b>fully uploaded</b> before sharing the link. We can't access photos that are still uploading!</div></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Right-click the folder → Share</div>
+        <div class="step-sub">On computer: right-click. On phone: long-press the folder</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <b>On computer:</b> Right-click the folder → select <b>Share</b><br>
+      <b>On phone:</b> Long-press the folder → tap the <b>Share</b> icon or <b>⋮ More</b> → <b>Share</b>
+    </div>
+    <div class="mockup" style="margin-top:14px;">
+      <div class="mockup-bar">Context menu (right-click)</div>
+      <div class="mockup-body" style="padding:8px;">
+        <div class="context-menu">
+          <div class="menu-item">📂 Open</div>
+          <div class="menu-item">✏️ Rename</div>
+          <div class="menu-item">⬇️ Download</div>
+          <div class="menu-item highlight">🔗 Share &nbsp;<b style="font-size:10px; background:#e8f0fe; padding:2px 6px; border-radius:4px;">← TAP THIS</b></div>
+          <div class="menu-item">🗑️ Move to trash</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Change access to "Anyone with the link"</div>
+        <div class="step-sub">This is the most important step!</div>
+      </div>
+    </div>
+    <div class="step-body">
+      In the Share dialog, look for <b>General access</b> at the bottom.<br>
+      Click the dropdown (it may say <b>"Restricted"</b>) and change it to <b>"Anyone with the link"</b>.
+    </div>
+    <div class="mockup" style="margin-top:14px;">
+      <div class="mockup-bar">Share dialog</div>
+      <div class="mockup-body">
+        <div class="share-dialog">
+          <div class="share-title">🔗 Share "YQ Print Order"</div>
+          <div style="font-size:12px; font-weight:600; color:#888; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">General access</div>
+          <div class="access-row">
+            <span class="globe-icon">🌐</span>
+            <div class="access-label">
+              <b>Anyone with the link</b>
+              <span>Anyone on the internet with the link can view</span>
+            </div>
+            <div class="dropdown-fake">Viewer ▾</div>
+          </div>
+          <div style="margin-top:10px; padding:8px 10px; background:#e8f4e8; border-radius:6px; font-size:12px; color:#2a4a2a;">
+            ✅ Set to <b>Viewer</b> — we only need to view, not edit!
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="warning-box">⚠️ <div>Make sure it says <b>"Anyone with the link"</b> — NOT "Restricted". If it stays on Restricted, we won't be able to open your photos!</div></div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">Copy the link & paste it in the app</div>
+        <div class="step-sub">You're almost done!</div>
+      </div>
+    </div>
+    <div class="step-body">
+      Click <b>"Copy link"</b> in the Share dialog.<br><br>
+      Go back to the <b>YQ Photo Services order page</b> → Step 4 → paste the link into the <b>Google Drive Folder Link</b> field.
+    </div>
+    <div class="mockup" style="margin-top:14px;">
+      <div class="mockup-bar">Share dialog — copy link</div>
+      <div class="mockup-body">
+        <div class="share-link-box">
+          https://drive.google.com/drive/folders/1aBcDeFgHiJkLmNoP...
+        </div>
+        <button class="copy-btn">🔗 Copy link</button>
+      </div>
+    </div>
+    <div class="highlight-box">✅ <div>The link should start with <b>https://drive.google.com/drive/folders/</b></div></div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-title">Add photo notes (optional but helpful!)</div>
+        <div class="step-sub">Tell us exactly which photos to print</div>
+      </div>
+    </div>
+    <div class="step-body">
+      In the <b>Photo Selection Notes</b> field, you can tell us:<br><br>
+      • Which files to print (e.g. "Print IMG_001 to IMG_010 only")<br>
+      • Any specific editing requests<br>
+      • Photo orientation preferences<br>
+      • Which photos go in which size
+    </div>
+  </div>
+
+  <div class="final-box">
+    <h3>🎉 That's it!</h3>
+    <p>Once your order is submitted, Yiqin will review your photos and confirm via Carousell within 24 hours.<br><br>
+    If you have any trouble, message us on <b>Carousell — YQ Photo Services</b> and we'll help you out!</p>
+  </div>
+
+</div>
+</body>
+</html>
