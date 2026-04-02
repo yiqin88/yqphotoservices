@@ -1661,21 +1661,74 @@ ${cartDetails}
             }
         });
 
-        function sendChatMessage() {
+        async function sendChatMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
             if (!message) return;
             addChatMessage(message, 'user');
             chatLog.push({ role: 'user', text: message });
             input.value = '';
-            addChatMessage('Thinking...', 'loading');
-            const loadingMsg = document.querySelector('.message.loading:last-child');
-            setTimeout(() => {
-                const response = getAIResponse(message);
-                loadingMsg.remove();
-                addChatMessage(response, 'ai');
-                chatLog.push({ role: 'ai', text: response });
-            }, 300);
+
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message ai';
+            loadingDiv.style.fontStyle = 'italic';
+            loadingDiv.style.opacity = '0.6';
+            loadingDiv.textContent = 'Typing...';
+            document.getElementById('chatMessages').appendChild(loadingDiv);
+            document.getElementById('chatMessages').scrollTop = 999999;
+
+            try {
+                const systemPrompt = `You are the friendly customer service assistant for YQ Photo Services, a photo printing business in Singapore run by Yiqin. Keep replies concise (2-4 sentences max) and helpful. Always answer in a warm, professional tone.
+
+Key info:
+- Sizes & prices: 2R $0.50, 3R $0.70, 4R $0.70, 5R $2.00, 6R $3.50, 8R $4.00, 10R $10.00, A4 $3.50, A3 $10.50, 30x40cm $10.50, Photo Stickers $3.50/sheet
+- Minimum order: SGD $5.00
+- Delivery: SingPost Tracked Mailing $2.50 island-wide (2-4 working days), or FREE self-collection at 587 Woodlands Drive 16
+- Processing time: 1-2 days after payment confirmed
+- Payment: PayNow only — scan QR code, upload screenshot as proof
+- Photos: customer uploads to Google Drive, shares link at checkout
+- Prints: borderless by default, premium resin-coated paper, no fingerprints
+- For multiple sizes/quantities: customer adjusts qty per size in Step 1, adds each to cart. To specify which photo goes to which size, use the Photo Notes field at checkout
+- Cannot confirm exact same-day availability — ask customer to message on Carousell
+- Contact: Carousell search "YQ Photo Services"
+- If unsure, invite them to message on Carousell`;
+
+                const messages = chatLog.map(m => ({
+                    role: m.role === 'ai' ? 'assistant' : 'user',
+                    content: m.text
+                }));
+
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'claude-haiku-4-5-20251001',
+                        max_tokens: 300,
+                        system: systemPrompt,
+                        messages: messages
+                    })
+                });
+
+                const data = await res.json();
+                loadingDiv.remove();
+
+                if (data.content && data.content[0]) {
+                    const reply = data.content[0].text;
+                    addChatMessage(reply, 'ai');
+                    chatLog.push({ role: 'ai', text: reply });
+                } else {
+                    // Fallback to FAQ if API fails
+                    const reply = getAIResponse(message);
+                    addChatMessage(reply, 'ai');
+                    chatLog.push({ role: 'ai', text: reply });
+                }
+            } catch(e) {
+                loadingDiv.remove();
+                console.warn('AI API error, using FAQ fallback:', e);
+                const reply = getAIResponse(message);
+                addChatMessage(reply, 'ai');
+                chatLog.push({ role: 'ai', text: reply });
+            }
         }
 
         function handleChatKeypress(event) {
