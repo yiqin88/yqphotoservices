@@ -973,7 +973,7 @@
 
                         <label style="margin-top: 25px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
                             <span>Google Drive Folder Link *</span>
-                            <a href="google_drive_guide.html" target="_blank" style="font-size:12px; font-weight:600; color:var(--secondary); text-decoration:none; background:rgba(0,212,255,0.1); border:1px solid var(--secondary); padding:4px 10px; border-radius:20px; letter-spacing:0.3px;">
+                            <a href="https://yiqin88.github.io/yqphotoservices/google_drive_guide.html" target="_blank" style="font-size:12px; font-weight:600; color:var(--secondary); text-decoration:none; background:rgba(0,212,255,0.1); border:1px solid var(--secondary); padding:4px 10px; border-radius:20px; letter-spacing:0.3px;">
                                 📂 How to share my folder?
                             </a>
                         </label>
@@ -1114,11 +1114,18 @@
         }
 
         // Initialize
-        window.addEventListener('load', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch(e) { console.warn('EmailJS not loaded:', e); }
             renderPriceGrid();
             initChatbot();
             setupFileUpload();
+        });
+
+        window.addEventListener('load', function() {
+            // Fallback in case DOMContentLoaded missed it
+            if (document.getElementById('priceGrid').children.length === 0) {
+                renderPriceGrid();
+            }
         });
 
 
@@ -1491,6 +1498,8 @@
 
             btn.disabled = false;
             btn.textContent = 'Complete Order →';
+            // Send chat log alongside order
+            sendChatLog('Order ' + orderId + ' completed');
             goToStep(5);
         }
 
@@ -1507,7 +1516,7 @@
                 + (order.delivery === 'mail' ? `\nSingPost Tracked Mailing = SGD $${DELIVERY_FEE.toFixed(2)}` : '');
 
             // ── Telegram ──────────────────────────────────────────
-            const telegramMsg = `🎉 *New YQ Photo Order!*
+            const telegramMsg = `🎉 New YQ Photo Order!
 
 🆔 Order: ${order.orderId}
 👤 Name: ${order.name}
@@ -1516,10 +1525,10 @@
 📱 Phone: ${order.phone || 'N/A'}
 🚚 Delivery: ${deliveryLabel}
 
-📦 *Items:*
+📦 ITEMS:
 ${cartDetails}
 
-💰 *Total: SGD $${order.total.toFixed(2)}*
+💰 Total: SGD $${order.total.toFixed(2)}
 
 📅 Expected Date: ${order.expectedDate || 'Not specified'}
 🔗 Drive: ${order.driveLink || '(not provided)'}
@@ -1527,23 +1536,26 @@ ${cartDetails}
 💬 Special Requests: ${order.notes || '(not provided)'}
 📎 Payment Proof: ${order.paymentProof ? 'Uploaded ✓' : 'Not uploaded'}`;
 
-            const telegramRes = await fetch(
-                `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: telegramMsg,
-                        parse_mode: 'Markdown'
-                    })
+            try {
+                const telegramRes = await fetch(
+                    'https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/sendMessage',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_CHAT_ID,
+                            text: telegramMsg
+                        })
+                    }
+                );
+                const telegramData = await telegramRes.json();
+                if (!telegramData.ok) {
+                    console.error('Telegram error:', telegramData.description);
+                } else {
+                    console.log('Telegram sent OK');
                 }
-            );
-            const telegramData = await telegramRes.json();
-            if (!telegramData.ok) {
-                console.error('Telegram error:', telegramData);
-            } else {
-                console.log('Telegram sent ✓');
+            } catch(e) {
+                console.error('Telegram fetch error:', e);
             }
 
             // ── EmailJS ───────────────────────────────────────────
@@ -1623,40 +1635,29 @@ ${cartDetails}
             if (chatLog.length === 0) return;
             const logText = chatLog.map(m => '[' + m.role.toUpperCase() + ']: ' + m.text).join('\n');
             const timestamp = new Date().toLocaleString('en-SG', { timeZone: 'Asia/Singapore' });
-            const tgMsg = '💬 *Chat Log* (' + trigger + ')\n🗓 ' + timestamp + '\n--------------------\n' + logText;
+            const tgMsg = '\u{1F4AC} Chat Log (' + trigger + ')\n\u{1F5D3} ' + timestamp + '\n--------------------\n' + logText;
             try {
-                await fetch('https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/sendMessage', {
+                const res = await fetch('https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/sendMessage', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: tgMsg, parse_mode: 'Markdown' })
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: tgMsg })
                 });
-            } catch(e) { console.log('Chat log telegram error:', e); }
-            try {
-                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                    order_id: 'CHAT-' + Date.now().toString().slice(-6),
-                    customer_name: 'Chat Log',
-                    carousell_name: trigger,
-                    customer_email: '-',
-                    phone: '-',
-                    delivery_method: '-',
-                    items: logText,
-                    total: '0.00',
-                    expected_date: timestamp,
-                    drive_link: '-',
-                    photo_notes: '-',
-                    notes: 'Automated chat log'
-                });
-            } catch(e) { console.log('Chat log email error:', e); }
+                const data = await res.json();
+                if (!data.ok) console.warn('Chat log Telegram error:', data.description);
+                else console.log('Chat log sent to Telegram OK');
+            } catch(e) { console.warn('Chat log telegram error:', e); }
         }
-
         window.addEventListener('beforeunload', function() {
-            if (chatLog.length > 0) {
+            if (chatLog.length > 1) {
                 const logText = chatLog.map(m => '[' + m.role.toUpperCase() + ']: ' + m.text).join('\n');
-                const blob = new Blob([JSON.stringify({
+                const payload = JSON.stringify({
                     chat_id: TELEGRAM_CHAT_ID,
-                    text: '💬 Chat Log (session ended)\n' + logText
-                })], { type: 'application/json' });
-                navigator.sendBeacon('https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/sendMessage', blob);
+                    text: 'Chat Log (session ended)\n' + logText
+                });
+                navigator.sendBeacon(
+                    'https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/sendMessage',
+                    new Blob([payload], { type: 'application/json' })
+                );
             }
         });
 
@@ -1694,38 +1695,37 @@ ${cartDetails}
 
 
         // ==================== AI Q&A CONFIG ====================
-        // Edit this array to add/update questions and answers
+        // To add/update Q&A: add a new line { keywords: ['word1','word2'], answer: 'Your answer.' },
         const FAQ = [
-            { keywords: ['hello', 'hi', 'hey'], answer: 'Hi there! 👋 Welcome to YQ Photo Services. What can I help you with today?' },
-            { keywords: ['2r', '2"'], answer: '2R (2.5"×3.5") is our smallest size at $0.50 per print. Great for wallet photos! Min order $5.' },
-            { keywords: ['3r', '3"'], answer: '3R (3.5"×5") is $0.70 per print. Popular for passport-style and keepsake photos.' },
-            { keywords: ['4r', '4"', '4x6', 'popular'], answer: '4R (4"×6") is our most popular size at $0.70 per print. Perfect for everyday photos!' },
-            { keywords: ['5r', '5"'], answer: '5R (5"×7") is $2.00 per print. Great for slightly larger display photos.' },
-            { keywords: ['6r', '6"'], answer: '6R (6"×8") is $3.50 per print. Ideal for framing.' },
-            { keywords: ['8r', '8"'], answer: '8R (8"×10") is $4.00 per print. Beautiful large prints for display.' },
-            { keywords: ['10r', '10"'], answer: '10R (10"×12") is $10.00 per print. Our largest standard size.' },
-            { keywords: ['a4'], answer: 'A4 (8.3"×11.7") prints are $3.50 each. Great for documents or poster-style photos.' },
-            { keywords: ['a3'], answer: 'A3 (11.7"×16.5") prints are $10.50 each. Perfect for large display prints.' },
-            { keywords: ['sticker', 'stickers'], answer: 'Photo stickers are $3.50 per A4 sheet. Great for personalised gifts!' },
-            { keywords: ['size', 'sizes', 'price', 'pricing', 'how much', 'cost'], answer: 'We offer 2R ($0.50), 3R ($0.70), 4R ($0.70), 5R ($2.00), 6R ($3.50), 8R ($4.00), 10R ($10.00), A4 ($3.50), A3 ($10.50) and Photo Stickers ($3.50/sheet). Min order $5!' },
-            { keywords: ['minimum', 'min order', 'minimum order'], answer: 'Our minimum order is SGD $5.00. Mix and match any sizes to reach the minimum!' },
-            { keywords: ['delivery', 'singpost', 'mail', 'mailing', 'postage'], answer: '📬 SingPost Tracked Mailing is available for $2.50. Just select it in your cart! We also offer free self-collection at 587 Woodlands Drive 16.' },
-            { keywords: ['collection', 'self collect', 'pickup', 'collect', 'address', 'location', 'where'], answer: '📍 Self-collection is FREE at 587 Woodlands Drive 16, Singapore. Select this option during checkout.' },
-            { keywords: ['quality', 'paper', 'finish', 'matte', 'glossy'], answer: 'We print on high-quality inkjet photo paper with a premium non-reflective finish — no fingerprints, great for framing!' },
-            { keywords: ['file', 'format', 'upload', 'google drive', 'drive', 'photo'], answer: '📸 Upload your photos to Google Drive and share the folder link with us at checkout. We accept JPG, PNG and other standard formats. High resolution recommended!' },
-            { keywords: ['payment', 'paynow', 'pay', 'how to pay'], answer: '💳 We accept PayNow. Scan the QR code on the payment page and upload your screenshot as proof. Fast and secure!' },
-            { keywords: ['how long', 'turnaround', 'ready', 'when', 'processing'], answer: '⏱️ Turnaround depends on order size. Same-day collection may be available — message us to check!' },
-            { keywords: ['lamination', 'laminate'], answer: '✨ Lamination is available for most sizes. Contact us for pricing on your specific items!' },
-            { keywords: ['custom', 'special', 'personalised', 'personalized'], answer: 'Yes! We do custom sizing, photo cards, and special requests. Add your requirements in the notes at checkout.' },
-            { keywords: ['carousell'], answer: 'You can also find us on Carousell! Search YQ Photo Services. We respond within 24 hours.' },
-            { keywords: ['how long', 'ready', 'turnaround', 'when will', 'how fast', 'how soon'], answer: '1-2 Days =)' },
-            { keywords: ['process', 'deal', 'how does it work', 'steps', 'procedure'], answer: 'Select photo sizes and qty → input your details → make payment → upload photos to Google Drive → paste the link in the app. Simple!' },
-            { keywords: ['paper', 'matte', 'matt', 'glossy', 'finish', 'quality'], answer: 'Our photo paper uses premium quality resin coated paper. No fingerprint and super good quality!' },
-            { keywords: ['border', 'bordered', 'borderless', 'white border', 'edge'], answer: 'Our prints are default borderless. If you want bordered, please state it in the special request field!' },
-            { keywords: ['cutoff', 'cut off', 'crop', 'cropped', 'dimensions', 'cut'], answer: 'Ensure your dimensions are edited properly if printing on custom sizes. For standard sizes (4R, 8R, 2R, A4 etc), there will likely be little to no cutoff. If any picture has heavy cutoff, we will inform you on Carousell.' },
-            { keywords: ['30x40', '30 x 40', '30cm', 'large print', 'big print'], answer: '30×40cm large format prints are available at $10.50 each. Great for wall display!' },
-            { keywords: ['contact', 'support', 'help', 'question'], answer: '📞 Leave your request in the special notes at checkout, or find us on Carousell. We respond within 24 hours!' },
-            { keywords: ['how', 'process', 'steps', 'order', 'ordering'], answer: '🛒 Easy! 1️⃣ Pick sizes & add to cart, 2️⃣ Review cart & choose delivery, 3️⃣ Enter your details, 4️⃣ Pay via PayNow & share your Drive link, 5️⃣ Done — we\'ll confirm within 24hrs!' },
+            { keywords: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'], answer: 'Hi there! Welcome to YQ Photo Services. How can I help you today? Feel free to ask about our sizes, pricing, delivery, or ordering process.' },
+            { keywords: ['2r'], answer: '2R (2.5"x3.5") is priced at $0.50 per print. Great for wallet-sized keepsake photos. Minimum order is SGD $5.' },
+            { keywords: ['3r'], answer: '3R (3.5"x5") is priced at $0.70 per print. A popular choice for passport-style and gift photos.' },
+            { keywords: ['4r'], answer: '4R (4"x6") is our most popular size at $0.70 per print. Ideal for standard everyday photos.' },
+            { keywords: ['5r'], answer: '5R (5"x7") is priced at $2.00 per print. Great for slightly larger display photos.' },
+            { keywords: ['6r'], answer: '6R (6"x8") is priced at $3.50 per print. Ideal for framing and display.' },
+            { keywords: ['8r'], answer: '8R (8"x10") is priced at $4.00 per print. Beautiful for wall display and framing.' },
+            { keywords: ['10r'], answer: '10R (10"x12") is priced at $10.00 per print. Our largest standard photo size.' },
+            { keywords: ['a4'], answer: 'A4 (8.3"x11.7") prints are $3.50 each. Suitable for documents, collages, or poster-style photos.' },
+            { keywords: ['a3'], answer: 'A3 (11.7"x16.5") prints are $10.50 each. Perfect for large display or wall art.' },
+            { keywords: ['30x40', '30cm', '30 x 40'], answer: '30x40cm large format prints are $10.50 each. Ideal for statement wall pieces.' },
+            { keywords: ['sticker', 'stickers', 'photo sticker'], answer: 'Photo stickers are printed on an A4 sheet for $3.50 per sheet. Great for personalised gifts and decorations.' },
+            { keywords: ['size', 'sizes', 'what size', 'available size'], answer: 'We offer: 2R ($0.50), 3R ($0.70), 4R ($0.70), 5R ($2.00), 6R ($3.50), 8R ($4.00), 10R ($10.00), A4 ($3.50), A3 ($10.50), 30x40cm ($10.50), and Photo Stickers ($3.50/sheet). Minimum order is SGD $5.' },
+            { keywords: ['price', 'pricing', 'how much', 'cost', 'rate', 'charges'], answer: 'Our prices start from $0.50 per print. 2R: $0.50, 3R/4R: $0.70, 5R: $2.00, 6R: $3.50, 8R: $4.00, 10R/30x40cm/A3: $10.50, A4/Stickers: $3.50. Minimum order SGD $5.' },
+            { keywords: ['minimum', 'min order', 'minimum order', 'min'], answer: 'Our minimum order is SGD $5.00. You can mix and match any sizes to meet the minimum.' },
+            { keywords: ['multiple', 'quantities', 'quantity', 'how many', 'bulk', 'more than one', 'can i order'], answer: 'Yes, you can order as many prints as you like! Simply adjust the quantity for each size in Step 1 before adding to cart. There is no maximum order limit.' },
+            { keywords: ['delivery', 'singpost', 'mail', 'mailing', 'postage', 'ship', 'shipping'], answer: 'We offer SingPost Tracked Mailing island-wide for $2.50. Delivery takes an additional 2-4 working days after processing. You can also opt for free self-collection.' },
+            { keywords: ['self collect', 'collection', 'pickup', 'collect', 'where', 'address', 'location'], answer: 'Self-collection is FREE at 587 Woodlands Drive 16, Singapore. Please wait for our confirmation before coming down.' },
+            { keywords: ['how long', 'ready', 'turnaround', 'when', 'how fast', 'how soon', 'processing time', 'duration'], answer: 'Processing takes 1-2 days. If you selected SingPost mailing, please add another 2-4 working days for delivery. Same-day collection may be available for urgent orders - please message us on Carousell to check.' },
+            { keywords: ['process', 'how to order', 'steps', 'procedure', 'ordering', 'how does it work'], answer: 'Ordering is simple: 1) Select your photo sizes and quantities, 2) Add to cart and choose your delivery method, 3) Fill in your details, 4) Make payment via PayNow and upload your payment proof, 5) Paste your Google Drive folder link. We will confirm your order within 24 hours.' },
+            { keywords: ['paper', 'matte', 'matt', 'glossy', 'finish', 'quality', 'resin'], answer: 'We use premium resin-coated photo paper. Prints come out with a high-quality non-reflective finish with no fingerprints. Suitable for framing and gifting.' },
+            { keywords: ['border', 'bordered', 'borderless', 'white border', 'edge', 'margin'], answer: 'All prints are borderless by default. If you prefer a white border, please state it in the Special Requests field during checkout.' },
+            { keywords: ['cutoff', 'cut off', 'crop', 'cropped', 'cut', 'bleed'], answer: 'For standard sizes (2R, 4R, 8R, A4 etc.), there will be minimal to no cutoff. For custom sizes, please ensure your photo dimensions are correctly set. If any photo has significant cutoff, we will flag it on Carousell before printing.' },
+            { keywords: ['file', 'format', 'resolution', 'dpi', 'jpg', 'jpeg', 'png', 'upload', 'google drive'], answer: 'Please upload your photos to Google Drive, set sharing to "Anyone with the link can view", then paste the link at checkout. We accept JPG and PNG formats. Higher resolution gives better print quality.' },
+            { keywords: ['payment', 'paynow', 'pay', 'how to pay', 'transfer'], answer: 'We accept PayNow only. Scan the QR code shown at checkout and upload a screenshot of your payment as proof. Payment must be made before we proceed with printing.' },
+            { keywords: ['lamination', 'laminate'], answer: 'Lamination is available for most sizes at an additional cost. Please state your request in the Special Requests field or message us on Carousell for a quote.' },
+            { keywords: ['custom', 'custom size', 'special size', 'any size'], answer: 'Yes, custom sizes are available. Please message us on Carousell with your requirements and we will provide a quote.' },
+            { keywords: ['carousell', 'find you', 'contact', 'reach you', 'message you'], answer: 'You can find us on Carousell by searching "YQ Photo Services". We typically respond within 24 hours.' },
+            { keywords: ['proof', 'receipt', 'payment proof', 'screenshot'], answer: 'After making payment via PayNow, take a screenshot of the successful transaction and upload it at Step 4 (Payment page) before submitting your order.' },
         ];
 
         function getAIResponse(userMessage) {
