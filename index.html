@@ -1641,27 +1641,30 @@ ${cartDetails}
                 console.error('EmailJS owner error:', e);
             }
 
-            // Log order to Google Sheets
+            // Log order to Google Sheets via form submission (bypasses CORS)
             try {
-                await fetch(SHEETS_WEBHOOK, {
+                const sheetsData = {
+                    order_id:      order.orderId,
+                    date:          new Date().toLocaleString('en-SG', { timeZone: 'Asia/Singapore' }),
+                    customer_name: order.name,
+                    carousell:     order.carousell,
+                    email:         order.email,
+                    phone:         order.phone || 'N/A',
+                    delivery:      deliveryLabel,
+                    items:         itemsForEmail,
+                    total:         order.total.toFixed(2),
+                    drive_link:    order.driveLink || '(not provided)',
+                    expected_date: order.expectedDate || 'Not specified',
+                    notes:         order.notes || ''
+                };
+                // Use no-cors mode - Apps Script accepts this
+                fetch(SHEETS_WEBHOOK, {
                     method: 'POST',
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        order_id:      order.orderId,
-                        date:          new Date().toLocaleString('en-SG', { timeZone: 'Asia/Singapore' }),
-                        customer_name: order.name,
-                        carousell:     order.carousell,
-                        email:         order.email,
-                        phone:         order.phone || 'N/A',
-                        delivery:      deliveryLabel,
-                        items:         itemsForEmail,
-                        total:         order.total.toFixed(2),
-                        drive_link:    order.driveLink || '(not provided)',
-                        expected_date: order.expectedDate || 'Not specified',
-                        notes:         order.notes || ''
-                    })
+                    body: JSON.stringify(sheetsData)
                 });
-                console.log('Google Sheets logged OK');
+                console.log('Google Sheets request sent');
             } catch(e) {
                 console.warn('Sheets logging error:', e);
             }
