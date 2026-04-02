@@ -741,21 +741,58 @@
             color: var(--primary);
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 900px) {
             .container {
                 flex-direction: column;
-                height: auto;
+                padding: 12px;
+                gap: 12px;
             }
-
+            .main-content {
+                max-width: 100%;
+            }
             .chatbot-container {
                 width: 100%;
-                height: auto;
+                height: 420px;
                 position: relative;
                 top: auto;
+                align-self: auto;
             }
-
             .price-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .content-wrapper {
+                padding: 16px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .progress-indicator {
+                font-size: 10px;
+            }
+            .step-number {
+                width: 26px;
+                height: 26px;
+                font-size: 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            .price-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .price-option {
+                padding: 10px 8px;
+            }
+            .price-option-size {
+                font-size: 14px;
+            }
+            .add-to-cart-btn {
+                font-size: 11px;
+                padding: 8px 4px;
+            }
+            .button-group {
+                flex-direction: column;
             }
         }
     </style>
@@ -1754,4 +1791,7 @@ ${cartDetails}
             if (bestScore >= 2 && bestAnswer) return bestAnswer;
 
             return 'Thank you for your question! For the most accurate answer, please message us on Carousell (search "YQ Photo Services") and we will get back to you within 24 hours. You can also ask about our sizes, pricing, delivery, or ordering process!';
-        }>
+        }
+    </script>
+</body>
+</html>
