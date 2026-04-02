@@ -1133,6 +1133,7 @@
         const EMAILJS_SERVICE_ID = 'service_zbcnj0t';
         const EMAILJS_TEMPLATE_ID = 'template_nmg5kic';
         const EMAILJS_PUBLIC_KEY = 'kx-mDFrtVvl8HoHzW';
+        const SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbxrpZK3Mq4DFUvCDiAYQ4oUXOaHJoAZ_U0hNVAchdNWgPdJ89eNo6WKXvwqoxpzmeSA/exec';
 
         let currentStep = 1;
         let cart = []; // Array to store cart items
@@ -1638,6 +1639,31 @@ ${cartDetails}
                 console.log('EmailJS sent to owner ✓', emailRes.status);
             } catch(e) {
                 console.error('EmailJS owner error:', e);
+            }
+
+            // Log order to Google Sheets
+            try {
+                await fetch(SHEETS_WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id:      order.orderId,
+                        date:          new Date().toLocaleString('en-SG', { timeZone: 'Asia/Singapore' }),
+                        customer_name: order.name,
+                        carousell:     order.carousell,
+                        email:         order.email,
+                        phone:         order.phone || 'N/A',
+                        delivery:      deliveryLabel,
+                        items:         itemsForEmail,
+                        total:         order.total.toFixed(2),
+                        drive_link:    order.driveLink || '(not provided)',
+                        expected_date: order.expectedDate || 'Not specified',
+                        notes:         order.notes || ''
+                    })
+                });
+                console.log('Google Sheets logged OK');
+            } catch(e) {
+                console.warn('Sheets logging error:', e);
             }
 
             // Send confirmation email to customer using dedicated template
