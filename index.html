@@ -883,6 +883,25 @@
                         <input type="tel" id="customerPhone" placeholder="+65 XXXX XXXX">
                     </div>
 
+                    <!-- Mailing address fields - shown only when mail delivery selected -->
+                    <div id="mailingAddressSection" style="display:none;">
+                        <div style="background:#fff8e8; border:1.5px solid var(--warning); border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:13px; color:#7a5a1e;">
+                            📬 SingPost Tracked Mailing selected — please provide your full delivery details below.
+                        </div>
+                        <div class="form-group">
+                            <label>Full Name (as per delivery) *</label>
+                            <input type="text" id="mailingName" placeholder="Full name for delivery">
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Number *</label>
+                            <input type="tel" id="mailingPhone" placeholder="+65 XXXX XXXX">
+                        </div>
+                        <div class="form-group">
+                            <label>Full Delivery Address *</label>
+                            <textarea id="mailingAddress" placeholder="Block, Street, Unit, Postal Code&#10;e.g. Blk 123 Woodlands Ave 1, #05-10, Singapore 730123" style="min-height:80px;"></textarea>
+                        </div>
+                    </div>
+
                     <div class="button-group">
                         <button class="btn-secondary" onclick="goToStep(2)">← Back</button>
                         <button class="btn-primary" onclick="goToStep(4)">Continue to Payment →</button>
@@ -1058,6 +1077,13 @@
                 selfLabel.style.borderColor = 'var(--border)';
                 selfLabel.style.background = 'white';
             }
+
+            // Show/hide mailing address fields in step 3
+            const mailingSection = document.getElementById('mailingAddressSection');
+            if (mailingSection) {
+                mailingSection.style.display = method === 'mail' ? 'block' : 'none';
+            }
+
             updateCartDisplay();
         }
 
@@ -1270,6 +1296,11 @@
                 orderData.email = document.getElementById('customerEmail').value;
                 orderData.phone = document.getElementById('customerPhone').value;
                 orderData.delivery = deliveryMethod;
+                if (deliveryMethod === 'mail') {
+                    orderData.mailingName = document.getElementById('mailingName').value;
+                    orderData.mailingPhone = document.getElementById('mailingPhone').value;
+                    orderData.mailingAddress = document.getElementById('mailingAddress').value;
+                }
                 updateSummary();
             }
 
@@ -1340,6 +1371,16 @@
                     return false;
                 }
 
+                if (deliveryMethod === 'mail') {
+                    const mName = document.getElementById('mailingName').value.trim();
+                    const mPhone = document.getElementById('mailingPhone').value.trim();
+                    const mAddress = document.getElementById('mailingAddress').value.trim();
+                    if (!mName || !mPhone || !mAddress) {
+                        alert('Please fill in all delivery address fields for SingPost mailing');
+                        return false;
+                    }
+                }
+
                 return true;
             }
 
@@ -1395,6 +1436,17 @@
             btn.disabled = true;
             btn.textContent = '⏳ Submitting...';
 
+            // Capture step 4 data before sending
+            orderData.driveLink = document.getElementById('googleDriveLink').value.trim();
+            orderData.photoNotes = document.getElementById('photoNotes').value.trim();
+            orderData.paymentProof = document.getElementById('paymentProof').files.length > 0;
+            // Re-capture mailing address in case user went back and changed delivery
+            if (deliveryMethod === 'mail') {
+                orderData.mailingName = document.getElementById('mailingName').value.trim();
+                orderData.mailingPhone = document.getElementById('mailingPhone').value.trim();
+                orderData.mailingAddress = document.getElementById('mailingAddress').value.trim();
+            }
+
             const orderId = '#' + Date.now().toString().slice(-6);
             orderData.orderId = orderId;
             orderData.cart = cart;
@@ -1417,8 +1469,11 @@
 
         async function sendOrderNotification(order) {
             const cartDetails = order.cart.map(item => `${item.sizeDisplay} (${item.size}) × ${item.qty} = SGD $${(item.qty * item.price).toFixed(2)}`).join('\n');
+            const mailingDetails = order.delivery === 'mail'
+                ? `\nName: ${order.mailingName}\nPhone: ${order.mailingPhone}\nAddress: ${order.mailingAddress}`
+                : '';
             const deliveryLabel = order.delivery === 'mail'
-                ? `SingPost Tracked Mailing (+$${DELIVERY_FEE.toFixed(2)})`
+                ? `SingPost Tracked Mailing (+$${DELIVERY_FEE.toFixed(2)})${mailingDetails}`
                 : 'Self Collection — 587 Woodlands Drive 16';
 
             const itemsForEmail = order.cart.map(item => `${item.sizeDisplay} (${item.size}) × ${item.qty} = SGD $${(item.qty * item.price).toFixed(2)}`).join('\n')
@@ -1494,6 +1549,9 @@ ${cartDetails}
             document.getElementById('customerCarousell').value = '';
             document.getElementById('customerEmail').value = '';
             document.getElementById('customerPhone').value = '';
+            document.getElementById('mailingName').value = '';
+            document.getElementById('mailingPhone').value = '';
+            document.getElementById('mailingAddress').value = '';
             deliveryMethod = 'self';
             selectDelivery('self');
             document.getElementById('specialNotes').value = '';
