@@ -55,6 +55,24 @@ function DiscountTiers() {
 // SHOP / CHECKOUT FLOW
 // ============================================================
 function ShopFlow({ step, setStep, cart, setCart, customer, setCustomer, lastOrder, setLastOrder }) {
+  // Scroll to top of #shop whenever the step changes. Especially important
+  // for Step 4 -> Step 5: Step 4 is tall (form), Step 5 is short (success);
+  // without this, viewport ends up on Quality/Reviews below ShopFlow.
+  const isInitialMount = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    requestAnimationFrame(() => {
+      const el = document.getElementById('shop');
+      if (!el) return;
+      const headerOffset = 80;
+      const top = el.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  }, [step]);
+
   return (
     <section id="shop" style={{ padding: '80px 0', background: 'var(--cream-soft)' }}>
       <div className="container" style={{ maxWidth: 1100 }}>

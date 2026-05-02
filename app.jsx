@@ -53,7 +53,19 @@ function App() {
 
   const cartCount = cart.reduce((s, c) => s + c.qty, 0);
   const scrollToShop = () => {
-    document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Defer to next frame so any pending React re-render commits before we
+    // measure the target. Without this, iOS Safari smooth scroll uses the
+    // pre-render layout and can overshoot past #shop when the cart update
+    // changes Step 1 height (e.g. the keychains-in-order summary card).
+    // Also subtract sticky header height so the section header is not
+    // hidden behind the nav bar.
+    requestAnimationFrame(() => {
+      const el = document.getElementById('shop');
+      if (!el) return;
+      const headerOffset = 80;
+      const top = el.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
   };
 
   return (
