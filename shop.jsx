@@ -1043,24 +1043,12 @@ function Step5({ result, onRestart }) {
     if (navigator.clipboard && orderId !== '—') navigator.clipboard.writeText(orderId);
   };
 
-  // Auto-download the receipt once on arrival, so the customer always has a copy.
-  React.useEffect(() => {
-    if (!receipt || !receipt.blob) return;
-    try {
-      const url = URL.createObjectURL(receipt.blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = receipt.filename || `YQReceipt_${orderId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      // Keep the URL alive so the visible "Download receipt" button keeps working.
-      // It will be GC'd when the user leaves the page.
-    } catch (e) {
-      console.warn('[YQ] auto-download receipt failed:', e);
-    }
-    // eslint-disable-next-line
-  }, [receipt && receipt.filename]);
+  // NOTE: We deliberately do NOT auto-download the receipt here.
+  // On iOS Safari, programmatic <a download> clicks replace the page
+  // with the PDF preview instead of triggering a download — customers
+  // never see this Step 5 confirmation. The customer can tap the
+  // "Download receipt" button below if they want a copy. The receipt
+  // is also sent to the studio's Telegram automatically.
 
   const downloadReceipt = () => {
     if (!receipt || !receipt.blob) return;
@@ -1090,10 +1078,28 @@ function Step5({ result, onRestart }) {
         <button onClick={copyId} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', borderRadius: 999, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', letterSpacing: 1 }}>COPY</button>
       </div>
 
-      <p className="serif-italic" style={{ fontSize: 18, color: 'var(--muted)', marginBottom: 12, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
-        Thanks! We've sent a confirmation email and notified the studio. Please message us on Carousell with this order number so we can validate your payment.
-      </p>
-      <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 32 }}>
+      {/* Prominent next-step instructions */}
+      <div style={{
+        maxWidth: 560,
+        margin: '0 auto 28px',
+        padding: '20px 24px',
+        background: 'var(--cream-soft)',
+        border: '1.5px solid var(--terracotta)',
+        borderRadius: 'var(--r-md)',
+        textAlign: 'left',
+      }}>
+        <div className="label-mono" style={{ color: 'var(--terracotta)', marginBottom: 10, textAlign: 'center' }}>
+          📸 What to do next
+        </div>
+        <ol style={{ margin: 0, paddingLeft: 20, fontSize: 15, lineHeight: 1.7, color: 'var(--ink)' }}>
+          <li><strong>Screenshot this page</strong> (or copy the order ID above)</li>
+          <li>Open <a href="https://www.carousell.sg/u/yiqin88" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>YQ Photo Services on Carousell</a></li>
+          <li>Send the screenshot / order ID so we can validate your payment</li>
+        </ol>
+      </div>
+
+      <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 32, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
+        We've also sent a confirmation email and notified the studio.
         ⚠️ This is not a final receipt — YQ Photo Services will confirm once payment is verified.
       </p>
 
