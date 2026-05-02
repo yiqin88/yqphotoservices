@@ -6,7 +6,7 @@ const { useState: useStateKC, useMemo: useMemoKC } = React;
 // ============================================================
 // Frame colors as a config so the configurator stays simple.
 const FRAME_COLORS = [
-  { id: 'none',  label: 'No frame', swatch: '#fff',    img: null },
+  { id: 'none',  label: 'No frame', swatch: '#fff',    img: 'assets/keychain-plain.jpg' },
   { id: 'blue',  label: 'Blue',     swatch: '#9CC2DE', img: 'assets/keychain-frame-blue.jpg' },
   { id: 'pink',  label: 'Pink',     swatch: '#F2C8C5', img: 'assets/keychain-frame-pink.jpg' },
   { id: 'black', label: 'Black',    swatch: '#1F1B16', img: 'assets/keychain-frame-black.jpg' },
@@ -190,7 +190,7 @@ function KeychainProduct({ onAddKeychain }) {
 
             {/* Shipping note */}
             <div style={{ display: 'flex', gap: 24, marginTop: 24, fontSize: 13, color: 'var(--muted)', flexWrap: 'wrap' }}>
-              <span>📮 SingPost mailing $1.50</span>
+              <span>📮 SingPost tracked mailing $2.50</span>
             </div>
           </div>
         </div>

@@ -265,6 +265,110 @@ function Step1({ cart, setCart, onNext }) {
         })}
       </div>
 
+      {/* Keychain awareness: summary if added, promo if not */}
+      {(() => {
+        const kcLines = cart.filter((c) => c.key.startsWith('KC-'));
+        const kcCount = kcLines.reduce((s, c) => s + c.qty, 0);
+        const kcTotal = kcLines.reduce((s, c) => s + c.qty * c.price, 0);
+
+        if (kcCount > 0) {
+          // Summary card — keychains already in cart
+          return (
+            <div style={{
+              marginTop: 24,
+              padding: 18,
+              background: 'var(--cream-soft)',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--r-md)',
+            }}>
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginBottom: 12, flexWrap: 'wrap', gap: 8,
+              }}>
+                <div className="label-mono" style={{ color: 'var(--terracotta)' }}>
+                  🔑 Acrylic keychains in your order
+                </div>
+                <div className="serif" style={{ fontSize: 18 }}>
+                  {kcCount} × ${kcTotal.toFixed(2)}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {kcLines.map((line) => {
+                  const color = line.key.slice(3); // none|blue|pink|black
+                  const imgMap = {
+                    none:  'assets/keychain-plain.jpg',
+                    blue:  'assets/keychain-frame-blue.jpg',
+                    pink:  'assets/keychain-frame-pink.jpg',
+                    black: 'assets/keychain-frame-black.jpg',
+                  };
+                  return (
+                    <div key={line.key} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '6px 10px 6px 6px',
+                      background: '#fff',
+                      border: '1px solid var(--line-soft)',
+                      borderRadius: 999,
+                      fontSize: 13,
+                    }}>
+                      <img src={imgMap[color]} alt="" style={{
+                        width: 28, height: 28, borderRadius: '50%',
+                        objectFit: 'cover', border: '1px solid var(--line)',
+                      }} />
+                      <span>{line.label} × {line.qty}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>
+                <a href="#keychain" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>
+                  Add or modify keychains
+                </a>
+              </div>
+            </div>
+          );
+        }
+
+        // Promo card — no keychains yet
+        return (
+          <a href="#keychain" style={{
+            display: 'flex', alignItems: 'center', gap: 16,
+            marginTop: 24,
+            padding: '16px 20px',
+            background: 'linear-gradient(135deg, var(--cream-soft), var(--peach-soft))',
+            border: '1px solid var(--peach)',
+            borderRadius: 'var(--r-md)',
+            textDecoration: 'none',
+            color: 'inherit',
+            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <img src="assets/keychain-plain.jpg" alt="" style={{
+              width: 56, height: 56, borderRadius: 12,
+              objectFit: 'cover', border: '1px solid var(--line)',
+              flexShrink: 0,
+            }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <span style={{
+                  background: 'var(--terracotta)', color: '#fff',
+                  padding: '2px 8px', borderRadius: 999,
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+                }}>NEW</span>
+                <span className="serif" style={{ fontSize: 17 }}>Acrylic photo keychain</span>
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--muted)' }}>
+                Two photos per keychain · from $3.90 · floating frames available
+              </div>
+            </div>
+            <div style={{ color: 'var(--terracotta)', fontWeight: 600, fontSize: 14, flexShrink: 0 }}>
+              See options →
+            </div>
+          </a>
+        );
+      })()}
+
       {/* Footer cart bar */}
       <div style={{
         marginTop: 32,
