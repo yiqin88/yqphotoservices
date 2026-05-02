@@ -106,12 +106,24 @@ function Hero({ onShopClick }) {
       <div className="container" style={{ position: 'relative', zIndex: 1 }}>
 
         {/* Eyebrow row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
-          <span className="pill pill-cream">
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)' }}></span>
-            Open · Same-day printing available
-          </span>
-          <span className="eyebrow">Singapore · Est. 2018</span>
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span className="pill pill-cream">
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)' }}></span>
+              Open · Same-day printing · +$3 express fee
+            </span>
+            <span className="eyebrow">Singapore · Est. 2018</span>
+          </div>
+          <div style={{
+            marginTop: 10,
+            fontSize: 13,
+            color: 'var(--muted)',
+            fontStyle: 'italic',
+            maxWidth: 560,
+            lineHeight: 1.5,
+          }}>
+            Message us on <a href="https://www.carousell.sg/u/yiqin88" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>Carousell</a> or <a href="https://wa.me/6591184071" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>WhatsApp</a> to confirm same-day availability.
+          </div>
         </div>
 
         <div style={{
