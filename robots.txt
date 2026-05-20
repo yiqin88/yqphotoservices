@@ -1,0 +1,11 @@
+# robots.txt for YQ Photo Services
+# https://order.yqservices.org/
+
+User-agent: *
+Allow: /
+
+# Block crawler access to internal assets that don't need indexing
+Disallow: /receipt.js
+Disallow: /integrations.js
+
+Sitemap: https://order.yqservices.org/sitemap.xml
