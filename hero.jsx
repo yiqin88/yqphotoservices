@@ -122,7 +122,7 @@ function Hero({ onShopClick }) {
             maxWidth: 560,
             lineHeight: 1.5,
           }}>
-            Message us on <a href="https://www.carousell.sg/u/yiqin88" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>Carousell</a> or <a href="https://wa.me/6591184071" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>WhatsApp</a> to confirm same-day availability.
+            Message us on <a href="https://carousell.app.link/Mk8Vrne8D7b" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>Carousell</a> or <a href="https://wa.me/6591184071" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>WhatsApp</a> to confirm same-day availability.
           </div>
         </div>
 

@@ -1111,7 +1111,7 @@ function Step5({ result, onRestart }) {
         </div>
         <ol style={{ margin: 0, paddingLeft: 20, fontSize: 15, lineHeight: 1.7, color: 'var(--ink)' }}>
           <li><strong>Screenshot this page</strong> (or copy the order ID above)</li>
-          <li>Open <a href="https://www.carousell.sg/u/yiqin88" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>YQ Photo Services on Carousell</a></li>
+          <li>Open <a href="https://carousell.app.link/Mk8Vrne8D7b" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)', textDecoration: 'underline' }}>YQ Photo Services on Carousell</a></li>
           <li>Send the screenshot / order ID so we can validate your payment</li>
         </ol>
       </div>
@@ -1127,7 +1127,7 @@ function Step5({ result, onRestart }) {
             🧾 Download receipt ({receipt.receiptNo})
           </button>
         )}
-        <a href="https://www.carousell.sg/u/yiqin88" target="_blank" rel="noopener" className="btn btn-ink">Message us on Carousell</a>
+        <a href="https://carousell.app.link/Mk8Vrne8D7b" target="_blank" rel="noopener" className="btn btn-ink">Message us on Carousell</a>
         <button onClick={onRestart} className="btn btn-ghost">Place another order</button>
       </div>
     </div>
