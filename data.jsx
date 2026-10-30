@@ -19,7 +19,6 @@ window.PRICING = {
 };
 
 window.MIN_ORDER = 5.00;
-window.FREE_SHIP_THRESHOLD = 30.00;
 
 // Tiered discounts: spend more, save more.
 window.DISCOUNT_TIERS = [

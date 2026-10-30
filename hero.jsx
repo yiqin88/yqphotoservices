@@ -260,7 +260,7 @@ function Marquee() {
     'Premium fade-resistant paper',
     'Lab-grade colour calibration',
     '2–4 day turnaround',
-    'Free shipping over $30',
+    'SingPost tracked mailing $2.50',
     '100+ year archival rating',
     'Print sizes from 2R to A3',
     'Singapore-based studio',

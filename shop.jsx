@@ -431,10 +431,6 @@ function Step2({ cart, setCart, onBack, onNext }) {
   const tier = window.getDiscountTier(subtotal);
   const discount = tier ? subtotal * (tier.percent / 100) : 0;
   const afterDiscount = subtotal - discount;
-  const shipping = afterDiscount >= window.FREE_SHIP_THRESHOLD ? 0 : 3.50;
-  const total = afterDiscount + shipping;
-  const remaining = Math.max(0, window.FREE_SHIP_THRESHOLD - subtotal);
-  const progress = Math.min(100, (subtotal / window.FREE_SHIP_THRESHOLD) * 100);
 
   // Next discount tier hint
   const nextTier = window.DISCOUNT_TIERS.find((t) => subtotal < t.threshold);
@@ -459,7 +455,7 @@ function Step2({ cart, setCart, onBack, onNext }) {
     <div style={{ padding: 40 }}>
       <h3 className="serif" style={{ fontSize: 26, marginBottom: 24 }}>Review your cart</h3>
 
-      {/* Next discount tier progress (instead of free shipping) */}
+      {/* Next discount tier progress */}
       {nextTier && (
         <div style={{
           background: 'var(--cream-soft)',
