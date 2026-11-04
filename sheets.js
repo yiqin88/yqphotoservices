@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────
  * YQ Photo Services — A4 sublimation sheets
  * Packs every printed side of every personalised-gift design (× quantity)
- * onto A4 pages at ACTUAL SIZE, mirrored for sublimation transfer, with
+ * onto A4 pages at ACTUAL SIZE, NOT mirrored (the L805 driver's Mirror Image does that), with
  * crop marks at each piece's bleed corners. Output: one A4 PDF per sheet,
  * so the Mac prints it at 100% (no "scale to fit" surprises).
  *
@@ -80,12 +80,8 @@
       g.imageSmoothingQuality = 'high';
       for (const it of pages[n]) {
         const bm = await bitmap(it.blob);
-        const mx = A4_W - it.x - it.wMm;              // mirrored x position
-        g.save();
-        g.translate(px(mx + it.wMm), px(it.y));
-        g.scale(-1, 1);                                // mirror for sublimation
-        g.drawImage(bm, 0, 0, px(it.wMm), px(it.hMm));
-        g.restore();
+        const mx = it.x;                               // NOT mirrored: the L805 driver mirrors (Mirror Image ON)
+        g.drawImage(bm, px(mx), px(it.y), px(it.wMm), px(it.hMm));
         // crop marks just outside the bleed box corners
         g.strokeStyle = '#000'; g.lineWidth = px(0.2);
         const L = px(3), o = px(1);
@@ -100,7 +96,7 @@
       // footer label (readable, not mirrored)
       g.fillStyle = '#888';
       g.font = `${px(2.6)}px Arial, sans-serif`;
-      g.fillText(`${orderId} · sheet ${n + 1}/${pages.length} · MIRRORED for sublimation · print at 100% (actual size) on A4`,
+      g.fillText(`${orderId} · sheet ${n + 1}/${pages.length} · NOT mirrored · print at 100% on A4 with Mirror Image ON (Epson Matte, Best Quality)`,
         px(MARGIN), px(A4_H - MARGIN + 1));
 
       const pdf = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
@@ -111,8 +107,8 @@
       const lines = Object.entries(counts).map(([l, k]) => `• ${l} ×${k}`).join('\n');
       out.push({
         blob,
-        name: `${orderId}_A4_sheet${n + 1}of${pages.length}_mirrored.pdf`,
-        caption: `🖨 ${orderId} — A4 sheet ${n + 1}/${pages.length}\nMirrored · actual size · print at 100%\n${lines}`,
+        name: `${orderId}_A4_sheet${n + 1}of${pages.length}.pdf`,
+        caption: `🖨 ${orderId} — A4 sheet ${n + 1}/${pages.length}\nNot mirrored · L805: Epson Matte, Best Quality, Mirror Image ON, 100%\n${lines}`,
       });
     }
     return out;
