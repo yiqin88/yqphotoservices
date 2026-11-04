@@ -14,7 +14,23 @@
     const MAX_SRC = 3000;
     const ZMIN = 1, ZMAX = 5;
     const isHeart = P.shape === 'heart';
-    const TEXT_MIN = isHeart ? -18 : -30, TEXT_MAX = isHeart ? 30 : 34;
+    const FONTS = [
+      ['rounded', 'Bold', '800 {px} Inter, Arial, sans-serif'],
+      ['modern', 'Modern', '700 {px} Montserrat, Arial, sans-serif'],
+      ['classic', 'Classic', '600 {px} Fraunces, Georgia, serif'],
+      ['elegant', 'Elegant', 'italic 700 {px} "Playfair Display", Georgia, serif'],
+      ['script', 'Script', '400 {px} Pacifico, cursive'],
+      ['dancing', 'Dancing', '700 {px} "Dancing Script", cursive'],
+      ['vibes', 'Wedding', '400 {px} "Great Vibes", cursive'],
+      ['hand', 'Handwritten', '700 {px} Caveat, cursive'],
+      ['brush', 'Brush', '400 {px} "Kaushan Script", cursive'],
+      ['marker', 'Marker', '400 {px} "Permanent Marker", cursive'],
+      ['retro', 'Retro', '400 {px} Lobster, cursive'],
+      ['playful', 'Playful', '800 {px} "Baloo 2", sans-serif'],
+      ['type', 'Typewriter', '700 {px} "Courier Prime", monospace'],
+    ];
+    const COLORS = ['#FFFFFF', '#1A1612', '#C0392B', '#E86A92', '#F7B7C8', '#C8A35E', '#F2C14E',
+      '#F39C12', '#27AE60', '#1B9AAA', '#2E86DE', '#1F3A93', '#8E44AD', '#7F8C8D'];
     const fmt = (n) => '$' + n.toFixed(2);
     const cm = (mm) => (mm / 10).toFixed(1).replace(/\.0$/, '');
 
@@ -74,19 +90,26 @@
         <fieldset id="textControls">
           <input class="input w100" id="textInput" maxlength="28" placeholder="e.g. The Tan Family · 2026" autocomplete="off" />
           <div class="mg-lbl"><span>Font</span></div>
-          <div class="mg-row mg-seg" id="fontSeg">
-            <button type="button" data-font="rounded" class="on">Bold</button>
-            <button type="button" data-font="classic">Classic</button>
-            <button type="button" data-font="script">Script</button>
+          <div class="mg-row mg-seg mg-fonts" id="fontSeg">
+            ${FONTS.map(([k, label, css]) => `<button type="button" data-font="${k}" style="font:${css.replace('{px}', '17px').replace(/"/g, "'")}">${label}</button>`).join('')}
           </div>
           <div class="mg-lbl"><span>Colour</span></div>
           <div class="mg-row mg-sw" id="colorSw">
-            ${['#FFFFFF', '#1A1612', '#C0392B', '#E86A92', '#C8A35E'].map((c, i) => `<button type="button" data-color="${c}" style="background:${c}" class="${i ? '' : 'on'}" aria-label="${c}"></button>`).join('')}
+            ${COLORS.map((c) => `<button type="button" data-color="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}
+            <label class="mg-custom" title="Pick any colour"><input type="color" id="customColor" value="#3A7BD5" /><span>+</span></label>
+          </div>
+          <div class="mg-lbl"><span>Outline</span></div>
+          <div class="mg-row mg-seg" id="outlineSeg">
+            <button type="button" data-outline="1" class="on">On</button>
+            <button type="button" data-outline="0">Off</button>
           </div>
           <div class="mg-lbl"><span>Size</span></div>
           <input type="range" class="mg-range" id="textSize" min="4" max="14" step="0.5" value="7" />
-          <div class="mg-lbl"><span>Position</span><span>top ↔ bottom</span></div>
-          <input type="range" class="mg-range" id="textPos" min="${TEXT_MIN}" max="${TEXT_MAX}" value="${isHeart ? 18 : 28}" />
+          <div class="mg-lbl"><span>Position</span></div>
+          <div class="mg-row" style="align-items:center">
+            <span class="muted" style="font-size:13px;flex:1">✋ Drag your message on the preview to place it anywhere.</span>
+            <button type="button" class="btn btn-soft btn-sm" id="centreText">Centre</button>
+          </div>
         </fieldset>
       </div>
       <div class="mg-card">
@@ -136,7 +159,9 @@
 
     // ── state: one per side ─────────────────────────────────────
     const newSide = (i) => ({ img: null, srcScale: 1, rot: 0, zoom: 1, ox: 0, oy: 0,
-      text: '', font: 'rounded', color: i ? '#1A1612' : '#FFFFFF', textSize: 7, textY: isHeart ? 0.18 : (i ? 0 : 0.28) });
+      text: '', font: 'rounded', color: i ? '#1A1612' : '#FFFFFF', outline: true, textSize: 7,
+      textX: 0, textY: isHeart ? 0.18 : (i ? 0 : 0.28) });
+    let textBox = null;   // last drawn message box on the preview canvas (canvas px)
     let sides = P.sides.map((_, i) => newSide(i));
     let cur = 0;
     let qty = 1;
@@ -165,9 +190,8 @@
     }
     function effDpi(s) { return s.img ? (25.4 / (coverK(s) * s.zoom)) * s.srcScale : 0; }
     function fontCss(key, px) {
-      if (key === 'classic') return `600 ${px}px Fraunces, Georgia, serif`;
-      if (key === 'script') return `400 ${px}px Pacifico, cursive`;
-      return `800 ${px}px Inter, Arial, sans-serif`;
+      const f = FONTS.find((x) => x[0] === key) || FONTS[0];
+      return f[2].replace('{px}', px + 'px');
     }
     function isLight(hex) {
       const n = parseInt(hex.slice(1), 16);
@@ -180,6 +204,7 @@
 
     // ── rendering (preview, print file, thumbnail) ──────────────
     function render(c2d, pxW, s, opts) {
+      if (opts.overlay) textBox = null;
       const ppm = pxW / BOX_W, pxH = BOX_H * ppm;
       const trim = shapePath(P.bleedMm * ppm, P.bleedMm * ppm, P.widthMm * ppm, P.heightMm * ppm);
       c2d.save();
@@ -203,17 +228,23 @@
       if (t) {
         const sizePx = s.textSize * (P.widthMm / 63) * ppm;   // size slider is relative to the piece
         const cy = pxH / 2 + s.textY * P.heightMm * ppm;
+        const cx = pxW / 2 + s.textX * P.widthMm * ppm;
+        const maxW = P.widthMm * ppm * textMaxW(s.textY) * (1 - Math.min(0.6, Math.abs(s.textX) * 1.2));
         c2d.font = fontCss(s.font, sizePx);
         c2d.textAlign = 'center';
         c2d.textBaseline = 'middle';
         c2d.lineJoin = 'round';
-        if (s.img) {
+        if (s.outline) {
           c2d.lineWidth = sizePx * 0.16;
           c2d.strokeStyle = isLight(s.color) ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.85)';
-          c2d.strokeText(t, pxW / 2, cy, P.widthMm * ppm * textMaxW(s.textY));
+          c2d.strokeText(t, cx, cy, maxW);
         }
         c2d.fillStyle = s.color;
-        c2d.fillText(t, pxW / 2, cy, P.widthMm * ppm * textMaxW(s.textY));
+        c2d.fillText(t, cx, cy, maxW);
+        if (opts.overlay) {
+          const w = Math.min(maxW, c2d.measureText(t).width) + sizePx * 0.5, h = sizePx * 1.35;
+          textBox = { x: cx - w / 2, y: cy - h / 2, w, h };
+        }
       }
       if (opts.overlay) {
         const outside = new Path2D();
@@ -225,6 +256,12 @@
         c2d.lineWidth = 2 * dpr;
         c2d.strokeStyle = '#C26A47';
         c2d.stroke(trim);
+        if (textBox) {
+          c2d.setLineDash([4 * dpr, 4 * dpr]);
+          c2d.lineWidth = 1.5 * dpr;
+          c2d.strokeStyle = 'rgba(26,22,18,0.55)';
+          c2d.strokeRect(textBox.x, textBox.y, textBox.w, textBox.h);
+        }
         if (P.hole) {
           c2d.setLineDash([]);
           c2d.beginPath();
@@ -266,7 +303,7 @@
       $('zoomVal').textContent = Math.round(s.zoom * 100) + '%';
       $('textInput').value = s.text;
       $('textSize').value = s.textSize;
-      $('textPos').value = Math.round(s.textY * 100);
+      [...$('outlineSeg').children].forEach((x) => x.classList.toggle('on', (x.dataset.outline === '1') === s.outline));
       [...$('fontSeg').children].forEach((x) => x.classList.toggle('on', x.dataset.font === s.font));
       [...$('colorSw').children].forEach((x) => x.classList.toggle('on', x.dataset.color === s.color));
       if (multi) {
@@ -321,6 +358,7 @@
     const dist = (v) => Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y) || 1;
     function startGesture() {
       const v = [...pts.values()], s = S();
+      if (gesture && gesture.type === 'text' && v.length === 1) return;
       if (v.length === 1) gesture = { type: 'pan', x: v[0].x, y: v[0].y, ox: s.ox, oy: s.oy };
       else if (v.length >= 2) gesture = { type: 'pinch', d: dist(v), zoom: s.zoom };
       else gesture = null;
@@ -330,7 +368,20 @@
       $('zoom').value = Math.round(S().zoom * 100);
       $('zoomVal').textContent = Math.round(S().zoom * 100) + '%';
     }
+    function toCanvas(e) {
+      const r = cv.getBoundingClientRect();
+      return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height };
+    }
     cv.addEventListener('pointerdown', (e) => {
+      const c = toCanvas(e), b = textBox;
+      if (b && pts.size === 0 && c.x >= b.x - 8 * dpr && c.x <= b.x + b.w + 8 * dpr && c.y >= b.y - 8 * dpr && c.y <= b.y + b.h + 8 * dpr) {
+        cv.setPointerCapture(e.pointerId);
+        pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const s = S();
+        gesture = { type: 'text', x: e.clientX, y: e.clientY, tx: s.textX, ty: s.textY };
+        cv.style.cursor = 'move';
+        return;
+      }
       if (!S().img) return;
       cv.setPointerCapture(e.pointerId);
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -341,6 +392,13 @@
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       const v = [...pts.values()], s = S();
       const mmPerCss = BOX_W / cv.clientWidth;
+      if (gesture.type === 'text') {
+        const ox = (v[0].x - gesture.x) * mmPerCss, oy = (v[0].y - gesture.y) * mmPerCss;
+        s.textX = Math.max(-0.45, Math.min(0.45, gesture.tx + ox / P.widthMm));
+        s.textY = Math.max(-0.45, Math.min(0.45, gesture.ty + oy / P.heightMm));
+        draw();
+        return;
+      }
       if (gesture.type === 'pan' && v.length === 1) {
         s.ox = gesture.ox + (v[0].x - gesture.x) * mmPerCss;
         s.oy = gesture.oy + (v[0].y - gesture.y) * mmPerCss;
@@ -349,7 +407,12 @@
       }
       clampPan(s); draw();
     });
-    ['pointerup', 'pointercancel'].forEach((ev) => cv.addEventListener(ev, (e) => { pts.delete(e.pointerId); startGesture(); }));
+    ['pointerup', 'pointercancel'].forEach((ev) => cv.addEventListener(ev, (e) => {
+      pts.delete(e.pointerId);
+      if (gesture && gesture.type === 'text') gesture = null;
+      cv.style.cursor = '';
+      startGesture();
+    }));
     cv.addEventListener('wheel', (e) => {
       if (!S().img) return;
       e.preventDefault();
@@ -370,13 +433,26 @@
       draw();
     });
     $('colorSw').addEventListener('click', (e) => {
-      const b = e.target.closest('button'); if (!b) return;
+      const b = e.target.closest('button[data-color]'); if (!b) return;
       S().color = b.dataset.color;
       [...$('colorSw').children].forEach((x) => x.classList.toggle('on', x === b));
       draw();
     });
+    $('customColor').addEventListener('input', (e) => {
+      S().color = e.target.value.toUpperCase();
+      [...$('colorSw').children].forEach((x) => x.classList.remove('on'));
+      e.target.parentElement.classList.add('on');
+      draw();
+    });
+    $('outlineSeg').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      S().outline = b.dataset.outline === '1';
+      [...$('outlineSeg').children].forEach((x) => x.classList.toggle('on', x === b));
+      draw();
+    });
+    $('centreText').addEventListener('click', () => { S().textX = 0; S().textY = 0; draw(); });
     $('textSize').addEventListener('input', (e) => { S().textSize = +e.target.value; draw(); });
-    $('textPos').addEventListener('input', (e) => { S().textY = e.target.value / 100; draw(); });
+
 
     function setQty(n) {
       qty = Math.min(99, Math.max(1, n | 0));
