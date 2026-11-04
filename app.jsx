@@ -97,6 +97,7 @@ function App() {
       <window.Header cartCount={cartCount} onCartClick={scrollToShop} onShopClick={scrollToShop} />
       <window.Hero onShopClick={scrollToShop} />
       <window.Marquee />
+      <window.GiftsShowcase />
       <window.ProductShowcase onShopClick={scrollToShop} />
       <window.DiscountTiers />
       <window.KeychainProduct onAddKeychain={(kc) => {

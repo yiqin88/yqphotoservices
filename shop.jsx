@@ -283,31 +283,30 @@ function Step1({ cart, setCart, onNext }) {
         })}
       </div>
 
-      {/* Heart magnet designer: summary if added, promo if not */}
+      {/* Personalised gifts: summary if added, promo if not */}
       {(() => {
-        const magLines = cart.filter((c) => c.key.startsWith('MAG-'));
-        const magCount = magLines.reduce((s, c) => s + c.qty, 0);
-        const magPrice = window.YQMagnets ? window.YQMagnets.config.price : 0;
+        const giftLines = cart.filter((c) => c.key.startsWith('MAG-'));
+        const giftCount = giftLines.reduce((s, c) => s + c.qty, 0);
         return (
-          <a href="magnet.html" style={{
+          <a href="#gifts" style={{
             display: 'flex', alignItems: 'center', gap: 16,
             marginTop: 24, padding: '16px 20px',
-            background: magCount ? 'var(--cream-soft)' : 'linear-gradient(135deg, var(--cream-soft), var(--peach-soft))',
-            border: '1px solid ' + (magCount ? 'var(--line)' : 'var(--peach)'),
+            background: giftCount ? 'var(--cream-soft)' : 'linear-gradient(135deg, var(--cream-soft), var(--peach-soft))',
+            border: '1px solid ' + (giftCount ? 'var(--line)' : 'var(--peach)'),
             borderRadius: 'var(--r-md)', textDecoration: 'none', color: 'inherit',
           }}>
-            <div style={{ fontSize: 34, lineHeight: 1 }}>🧲</div>
+            <div style={{ fontSize: 34, lineHeight: 1 }}>🎁</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="serif" style={{ fontSize: 17 }}>
-                {magCount ? `${magCount} heart magnet${magCount > 1 ? 's' : ''} in your order` : 'Design your own heart photo magnet'}
+                {giftCount ? `${giftCount} personalised gift${giftCount > 1 ? 's' : ''} in your order` : 'Design your own photo gifts'}
               </div>
               <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-                {magCount
-                  ? `${magLines.length} design${magLines.length > 1 ? 's' : ''} · tap to add another`
-                  : `Upload a photo, add a message, see it before you order · ${window.fmt(magPrice)} each`}
+                {giftCount
+                  ? `${giftLines.length} design${giftLines.length > 1 ? 's' : ''} · tap to add another`
+                  : 'Heart magnets, round ornaments and heart puzzles — upload a photo, see it before you order'}
               </div>
             </div>
-            <div style={{ fontWeight: 600, color: 'var(--terracotta)', whiteSpace: 'nowrap' }}>{magCount ? 'Add more →' : 'Design →'}</div>
+            <div style={{ fontWeight: 600, color: 'var(--terracotta)', whiteSpace: 'nowrap' }}>{giftCount ? 'Add more →' : 'Design →'}</div>
           </a>
         );
       })()}
@@ -541,7 +540,7 @@ function Step2({ cart, setCart, onBack, onNext }) {
             pink:  'Acrylic keychain + pink frame',
             black: 'Acrylic keychain + black frame',
           };
-          const title = isMag ? (c.label || 'Heart photo magnet') : isKC ? kcLabelMap[kcColor]
+          const title = isMag ? (c.label || 'Personalised gift') : isKC ? kcLabelMap[kcColor]
                        : isSticker ? 'Photo sticker sheet'
                        : `${c.key} prints`;
           const subtitle = isMag ? `${c.size} · your design` : isKC ? '46 × 28 mm · double-sided'

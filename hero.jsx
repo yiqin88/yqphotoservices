@@ -44,6 +44,7 @@ function Header({ cartCount, onCartClick, onShopClick }) {
 
         <nav style={{ display: 'flex', alignItems: 'center', gap: 28 }} className="nav-links">
           <a href="#shop"     style={navLinkStyle}>Shop</a>
+          <a href="#gifts"    style={navLinkStyle}>Gifts</a>
           <a href="#gallery"  style={navLinkStyle}>Gallery</a>
           <a href="#quality"  style={navLinkStyle}>Quality</a>
           <a href="#reviews"  style={navLinkStyle}>Reviews</a>
@@ -113,6 +114,7 @@ function Hero({ onShopClick }) {
               Open · Same-day printing · +$3 express fee
             </span>
             <span className="eyebrow">Singapore · Est. 2018</span>
+            <a href="#gifts" className="pill pill-terra" style={{ textDecoration: 'none' }}>✨ New: design your own photo gifts →</a>
           </div>
           <div style={{
             marginTop: 10,
