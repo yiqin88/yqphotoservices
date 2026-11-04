@@ -15,7 +15,7 @@
 
   const products = {
     magnet: {
-      id: 'magnet', page: 'magnet.html', img: 'assets/sample-magnet.jpg',
+      id: 'magnet', page: 'magnet.html', img: 'assets/sample-magnet.jpg?v=20261104e',
       label: 'Heart photo magnet', short: 'Heart magnet',
       shape: 'heart', widthMm: 63, heightMm: 62, bleedMm: 2, dpi: 300,
       price: 5.90,
@@ -26,7 +26,7 @@
       available: true,
     },
     ornament: {
-      id: 'ornament', page: 'ornament.html', img: 'assets/sample-ornament.jpg',
+      id: 'ornament', page: 'ornament.html', img: 'assets/sample-ornament.jpg?v=20261104e',
       label: 'Round photo ornament', short: 'Round ornament',
       shape: 'circle', widthMm: 70, heightMm: 70, bleedMm: 2, dpi: 300,
       price: 7.90,
@@ -38,7 +38,7 @@
       available: true,
     },
     puzzle: {
-      id: 'puzzle', page: 'puzzle.html', img: 'assets/sample-puzzle.jpg',
+      id: 'puzzle', page: 'puzzle.html', img: 'assets/sample-puzzle.jpg?v=20261104e',
       label: 'Heart photo puzzle', short: 'Heart puzzle',
       shape: 'heart', widthMm: 188, heightMm: 186, bleedMm: 3, dpi: 300,
       price: 14.90,

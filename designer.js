@@ -68,7 +68,7 @@
       </div>
       <div class="mg-res" id="resBadge" hidden></div>
       <img class="mg-sample" src="${P.img}" alt="Example ${P.label}" loading="lazy" />
-      <div class="mg-sample-cap">${P.id === 'puzzle' ? 'A real heart puzzle from our studio' : 'Example with a family photo'}</div>
+      <div class="mg-sample-cap">${({ puzzle: 'A real heart puzzle from our studio', magnet: 'A real heart magnet from our studio', ornament: 'Real ornaments from our studio · front and back' })[P.id] || 'Made in our studio'}</div>
     </section>
     <section>
       <div class="mg-card">
