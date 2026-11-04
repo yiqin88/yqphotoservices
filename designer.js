@@ -58,10 +58,10 @@
         <div class="mg-canvas-box" id="canvasBox">
           <canvas id="preview" aria-label="Design preview"></canvas>
           <label class="mg-drop" id="dropZone">
-            <input type="file" id="fileInput" accept="image/*" hidden />
+            <input type="file" id="fileInput" accept="image/*,.heic,.heif" hidden />
             <div class="mg-drop-icon">📷</div>
             <div class="mg-drop-title" id="dropTitle">Tap to upload your photo</div>
-            <div class="mg-drop-sub" id="dropSub">JPG or PNG · or drag a photo here</div>
+            <div class="mg-drop-sub" id="dropSub">JPG, PNG or iPhone HEIC · or drag a photo here</div>
           </label>
         </div>
         <div class="mg-hint">Drag to move · pinch or use the zoom slider · actual size ${cm(P.widthMm)} × ${cm(P.heightMm)} cm</div>
@@ -324,12 +324,35 @@
 
     // ── photo loading ───────────────────────────────────────────
     function status(msg, err) { const s = $('status'); s.textContent = msg || ''; s.className = 'mg-status' + (err ? ' err' : ''); }
+    let heicPromise = null;
+    function loadHeicConverter() {                      // ~1 MB, only fetched when a HEIC photo needs it
+      if (window.heic2any) return Promise.resolve();
+      if (!heicPromise) heicPromise = new Promise((res, rej) => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+        sc.onload = () => res(); sc.onerror = () => { heicPromise = null; rej(new Error('HEIC converter failed to load')); };
+        document.head.appendChild(sc);
+      });
+      return heicPromise;
+    }
     async function loadFile(file) {
       if (!file) return;
       status('Loading photo…');
-      const url = URL.createObjectURL(file);
+      let url = URL.createObjectURL(file);
+      const decode = (u) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('decode')); i.src = u; });
       try {
-        const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('decode')); i.src = url; });
+        let img;
+        try {
+          img = await decode(url);                      // Safari decodes HEIC natively
+        } catch (err) {
+          if (!/\.(heic|heif)$/i.test(file.name) && !/hei[cf]/i.test(file.type)) throw err;
+          status('Converting iPhone HEIC photo…');
+          await loadHeicConverter();
+          const out = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.95 });
+          URL.revokeObjectURL(url);
+          url = URL.createObjectURL(Array.isArray(out) ? out[0] : out);
+          img = await decode(url);
+        }
         const ow = img.naturalWidth, oh = img.naturalHeight;
         if (!ow || !oh) throw new Error('decode');
         const k = Math.min(1, MAX_SRC / Math.max(ow, oh));
@@ -342,7 +365,7 @@
         syncUI();
         status('');
       } catch (e) {
-        status('Sorry, this photo can’t be opened in your browser. Please use a JPG or PNG (on iPhone, set Camera → Formats → Most Compatible, or screenshot the photo).', true);
+        status('Sorry, this photo can’t be opened in your browser. Please try a JPG or PNG instead.', true);
       } finally { URL.revokeObjectURL(url); }
     }
     $('fileInput').addEventListener('change', (e) => { loadFile((e.target.files || [])[0]); e.target.value = ''; });

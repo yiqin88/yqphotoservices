@@ -228,38 +228,31 @@ ${itemsText}
     }
   }
 
-  // ── 6. Telegram personalised-gift design files ──────────────
-  // One file per printed side, sent after the order text so they land below it.
+  // ── 6. Telegram personalised-gift print sheets ───────────────
+  // Every printed side × quantity is packed onto A4 PDFs at actual size,
+  // mirrored for sublimation, and sent after the order text.
   async function sendMagnetDesigns(order) {
     const lines = (order.cart || []).filter((c) => String(c.key).startsWith('MAG-'));
     if (!lines.length || !window.YQMagnets) return { skipped: 'no designs' };
     const designs = await window.YQMagnets.list();
     const results = [];
-    let fileNo = 0;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const d = designs.find((x) => 'MAG-' + x.id === line.key);
-      if (!d || !d.sides || !d.sides.length) { results.push({ key: line.key, ok: false, error: 'design missing' }); continue; }
-      const p = window.YQMagnets.products[d.product] || window.YQMagnets.products.magnet;
-      for (const side of d.sides) {
-        fileNo++;
-        const sideTag = d.sides.length > 1 || p.sides.length > 1 ? `_${side.name.toLowerCase()}` : '';
-        const name = `${order.orderId}_${p.id}${i + 1}${sideTag}_x${line.qty}.${side.ext || 'jpg'}`;
-        const caption =
-`🎁 ${p.label} ${i + 1}/${lines.length}${p.sides.length > 1 ? ' — ' + side.name.toUpperCase() : ''} — ${order.orderId}
-👤 ${order.name}
-📦 ${line.qty} pcs · ${p.widthMm} × ${p.heightMm} mm ${p.shape}${p.sides.length > 1 && d.sides.length === 1 ? ' · back left plain' : ''}
-🖨 ${p.dpi} dpi · ${p.widthMm + 2 * p.bleedMm} × ${p.heightMm + 2 * p.bleedMm} mm incl. ${p.bleedMm} mm bleed · not mirrored`;
-        try {
-          const fd = new FormData();
-          fd.append('document', side.blob, name);
-          fd.append('caption', caption);
-          const res = await fetch(WORKER_URL + '/notify-doc', { method: 'POST', body: fd });
-          const j = await res.json().catch(() => ({}));
-          results.push({ key: line.key, side: side.name, ok: res.ok && j.ok !== false, data: j });
-        } catch (e) {
-          results.push({ key: line.key, side: side.name, ok: false, error: String(e) });
-        }
+    let sheets = [];
+    try {
+      const items = window.YQSheets.itemsFromOrder(order.cart, designs, window.YQMagnets.products);
+      sheets = await window.YQSheets.build(items, { orderId: order.orderId });
+    } catch (e) {
+      results.push({ ok: false, error: 'sheet build failed: ' + e.message });
+    }
+    for (const sh of sheets) {
+      try {
+        const fd = new FormData();
+        fd.append('document', sh.blob, sh.name);
+        fd.append('caption', sh.caption);
+        const res = await fetch(WORKER_URL + '/notify-doc', { method: 'POST', body: fd });
+        const j = await res.json().catch(() => ({}));
+        results.push({ sheet: sh.name, ok: res.ok && j.ok !== false, data: j });
+      } catch (e) {
+        results.push({ sheet: sh.name, ok: false, error: String(e) });
       }
     }
     const failed = results.filter((r) => !r.ok);
@@ -268,12 +261,12 @@ ${itemsText}
         await fetch(WORKER_URL + '/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: `⚠️ ${order.orderId}: ${failed.length} of ${fileNo || lines.length} gift design file(s) failed to upload. Ask ${order.name} to resend the photo.` }),
+          body: JSON.stringify({ text: `⚠️ ${order.orderId}: ${failed.length} gift print sheet(s) failed (${failed.map((f) => f.error || f.sheet).join('; ')}). Ask ${order.name} to resend the photo.` }),
         });
       } catch (e) { /* nothing more we can do */ }
     }
     try { await window.YQMagnets.clear(); } catch (e) {}
-    return { ok: failed.length === 0, results };
+    return { ok: failed.length === 0, sheets: sheets.length, results };
   }
 
   // ── Public API ────────────────────────────────────────────────
