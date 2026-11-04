@@ -52,6 +52,30 @@ function App() {
   }, [tweaks?.theme]);
 
   const cartCount = cart.reduce((s, c) => s + c.qty, 0);
+
+  // Keep the cart when customers hop to magnet.html and back, and pull in saved magnet designs
+  const [cartLoaded, setCartLoaded] = useState(false);
+  const loadedAt = React.useRef(Date.now());
+  useEffect(() => {
+    const M = window.YQMagnets;
+    if (!M) { setCartLoaded(true); return; }
+    const saved = M.loadCart();
+    M.list().catch(() => []).then((designs) => {
+      setCart([...saved, ...designs.map(M.toCartLine)]);
+      loadedAt.current = Date.now();
+      setCartLoaded(true);
+      if (window.location.hash === '#shop' && (saved.length || designs.length)) setTimeout(scrollToShop, 150);
+    });
+    const onShow = (e) => { if (e.persisted) window.location.reload(); };
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  }, []);
+  useEffect(() => {
+    const M = window.YQMagnets;
+    if (!cartLoaded || !M) return;
+    M.saveCart(cart);
+    M.syncWithCart(cart, loadedAt.current).catch((e) => console.warn('[YQ] magnet sync failed:', e));
+  }, [cart, cartLoaded]);
   const scrollToShop = () => {
     // Defer to next frame so any pending React re-render commits before we
     // measure the target. Without this, iOS Safari smooth scroll uses the

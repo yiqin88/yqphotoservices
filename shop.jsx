@@ -283,6 +283,35 @@ function Step1({ cart, setCart, onNext }) {
         })}
       </div>
 
+      {/* Heart magnet designer: summary if added, promo if not */}
+      {(() => {
+        const magLines = cart.filter((c) => c.key.startsWith('MAG-'));
+        const magCount = magLines.reduce((s, c) => s + c.qty, 0);
+        const magPrice = window.YQMagnets ? window.YQMagnets.config.price : 0;
+        return (
+          <a href="magnet.html" style={{
+            display: 'flex', alignItems: 'center', gap: 16,
+            marginTop: 24, padding: '16px 20px',
+            background: magCount ? 'var(--cream-soft)' : 'linear-gradient(135deg, var(--cream-soft), var(--peach-soft))',
+            border: '1px solid ' + (magCount ? 'var(--line)' : 'var(--peach)'),
+            borderRadius: 'var(--r-md)', textDecoration: 'none', color: 'inherit',
+          }}>
+            <div style={{ fontSize: 34, lineHeight: 1 }}>🧲</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="serif" style={{ fontSize: 17 }}>
+                {magCount ? `${magCount} heart magnet${magCount > 1 ? 's' : ''} in your order` : 'Design your own heart photo magnet'}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--muted)' }}>
+                {magCount
+                  ? `${magLines.length} design${magLines.length > 1 ? 's' : ''} · tap to add another`
+                  : `Upload a photo, add a message, see it before you order · ${window.fmt(magPrice)} each`}
+              </div>
+            </div>
+            <div style={{ fontWeight: 600, color: 'var(--terracotta)', whiteSpace: 'nowrap' }}>{magCount ? 'Add more →' : 'Design →'}</div>
+          </a>
+        );
+      })()}
+
       {/* Keychain awareness: summary if added, promo if not */}
       {(() => {
         const kcLines = cart.filter((c) => c.key.startsWith('KC-'));
@@ -498,6 +527,7 @@ function Step2({ cart, setCart, onBack, onNext }) {
           // Keychain rows: KC-none / KC-blue / KC-pink / KC-black
           const isKC = c.key.startsWith('KC-');
           const isSticker = c.key === 'STICKERS';
+          const isMag = c.key.startsWith('MAG-');
           const kcColor = isKC ? c.key.slice(3) : null; // none|blue|pink|black
           const kcImgMap = {
             none:  'assets/keychain-1.jpg',
@@ -511,13 +541,13 @@ function Step2({ cart, setCart, onBack, onNext }) {
             pink:  'Acrylic keychain + pink frame',
             black: 'Acrylic keychain + black frame',
           };
-          const title = isKC ? kcLabelMap[kcColor]
+          const title = isMag ? (c.label || 'Heart photo magnet') : isKC ? kcLabelMap[kcColor]
                        : isSticker ? 'Photo sticker sheet'
                        : `${c.key} prints`;
-          const subtitle = isKC ? '46 × 28 mm · double-sided'
+          const subtitle = isMag ? `${c.size} · your design` : isKC ? '46 × 28 mm · double-sided'
                           : isSticker ? 'A4 vinyl sheet'
                           : (data?.cm || c.size || '');
-          const thumb = isKC ? kcImgMap[kcColor] : null;
+          const thumb = isMag ? (c.thumb || null) : isKC ? kcImgMap[kcColor] : null;
 
           return (
             <div key={c.key} style={{
@@ -762,6 +792,7 @@ function DeliveryOption({ active, onClick, title, subtitle, price, priceLabel, p
 function Step4({ cart, customer, setCustomer, onBack, onNext }) {
   const [proof, setProof] = useStateShop(null);
   const [driveError, setDriveError] = useStateShop('');
+  const needsDrive = cart.some((c) => !String(c.key).startsWith('MAG-'));
   const [submitting, setSubmitting] = useStateShop(false);
   const subtotal = cart.reduce((s, c) => s + c.qty * c.price, 0);
   const tier = window.getDiscountTier(subtotal);
@@ -780,8 +811,8 @@ function Step4({ cart, customer, setCustomer, onBack, onNext }) {
 
   const handleConfirm = async () => {
     const link = (customer.driveLink || '').trim();
-    if (!link) { setDriveError('Please paste your Google Drive folder link.'); return; }
-    if (!link.includes('drive.google.com')) { setDriveError('That doesn\u2019t look like a Google Drive link.'); return; }
+    if (needsDrive && !link) { setDriveError('Please paste your Google Drive folder link.'); return; }
+    if (link && !link.includes('drive.google.com')) { setDriveError('That doesn\u2019t look like a Google Drive link.'); return; }
     if (!proof) { setDriveError('Please upload a screenshot of your PayNow payment.'); return; }
     if (customer.wantReceipt && !(customer.receivedFrom || '').trim()) {
       setDriveError('Please fill in the "Received from" details for your receipt, or uncheck "I need a receipt".');
@@ -912,7 +943,7 @@ function Step4({ cart, customer, setCustomer, onBack, onNext }) {
           </div>
 
           {/* Google Drive link */}
-          <div className="field" style={{ marginBottom: 18 }}>
+          {needsDrive && <div className="field" style={{ marginBottom: 18 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
               <label style={{ marginBottom: 0 }}>📂 Google Drive folder link *</label>
               <a href="https://yiqin88.github.io/yqphotoservices/google_drive_guide.html" target="_blank" rel="noopener"
@@ -935,7 +966,7 @@ function Step4({ cart, customer, setCustomer, onBack, onNext }) {
             }}>
               💡 Make sure the folder is shared with <strong>"Anyone with the link can view"</strong>.
             </div>
-          </div>
+          </div>}
 
           {/* Receipt request — collapsible */}
           <div style={{

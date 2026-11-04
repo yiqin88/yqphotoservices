@@ -228,6 +228,49 @@ ${itemsText}
     }
   }
 
+  // ── 6. Telegram magnet design files ─────────────────────────
+  // One PNG per design, sent after the order text so it lands below it.
+  async function sendMagnetDesigns(order) {
+    const lines = (order.cart || []).filter((c) => String(c.key).startsWith('MAG-'));
+    if (!lines.length || !window.YQMagnets) return { skipped: 'no magnets' };
+    const cfg = window.YQMagnets.config;
+    const designs = await window.YQMagnets.list();
+    const results = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const d = designs.find((x) => 'MAG-' + x.id === line.key);
+      if (!d || !d.blob) { results.push({ key: line.key, ok: false, error: 'design missing' }); continue; }
+      const name = `${order.orderId}_magnet${i + 1}_x${line.qty}.png`;
+      const caption =
+`🧲 Magnet design ${i + 1}/${lines.length} — ${order.orderId}
+👤 ${order.name}
+📦 ${line.qty} pcs · heart ${cfg.widthMm} × ${cfg.heightMm} mm
+🖨 PNG ${cfg.dpi} dpi · ${cfg.widthMm + 2 * cfg.bleedMm} × ${cfg.heightMm + 2 * cfg.bleedMm} mm incl. ${cfg.bleedMm} mm bleed · not mirrored`;
+      try {
+        const fd = new FormData();
+        fd.append('document', d.blob, name);
+        fd.append('caption', caption);
+        const res = await fetch(WORKER_URL + '/notify-doc', { method: 'POST', body: fd });
+        const j = await res.json().catch(() => ({}));
+        results.push({ key: line.key, ok: res.ok && j.ok !== false, data: j });
+      } catch (e) {
+        results.push({ key: line.key, ok: false, error: String(e) });
+      }
+    }
+    const failed = results.filter((r) => !r.ok);
+    if (failed.length) {
+      try {
+        await fetch(WORKER_URL + '/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: `⚠️ ${order.orderId}: ${failed.length} of ${lines.length} magnet design file(s) failed to upload. Ask ${order.name} to resend the photo.` }),
+        });
+      } catch (e) { /* nothing more we can do */ }
+    }
+    try { await window.YQMagnets.clear(); } catch (e) {}
+    return { ok: failed.length === 0, results };
+  }
+
   // ── Public API ────────────────────────────────────────────────
   async function submit(order) {
     if (!order || typeof order !== 'object') {
@@ -267,6 +310,15 @@ ${itemsText}
 
     // Wait for all channels — none reject the outer promise; we return the verdict map
     await Promise.allSettled(tasks);
+
+    // Magnet design files after the order text, so they arrive below it in Telegram
+    try {
+      const m = await sendMagnetDesigns(order);
+      if (!m.skipped) channels.telegram_magnets = m;
+    } catch (e) {
+      channels.telegram_magnets = { ok: false, error: e.message };
+    }
+    try { window.YQMagnets && window.YQMagnets.clearCart(); } catch (e) {}
 
     console.log('[YQ] Order submitted:', order.orderId, channels);
     return { orderId: order.orderId, channels };
