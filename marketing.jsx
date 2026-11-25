@@ -298,9 +298,37 @@ function Footer() {
               Eight years of preserving the moments that matter.
             </p>
           </div>
-          <FooterCol title="Shop" items={['All sizes', 'Discounts', 'Stickers', 'Large format']} />
-          <FooterCol title="Studio" items={['About us', 'Quality promise', 'Sample gallery', 'Reviews']} />
-          <FooterCol title="Help" items={['FAQ', 'Contact', 'Shipping', 'Returns']} />
+          <FooterCol title="Shop" items={[
+            { label: 'All sizes', href: '#shop' },
+            { label: 'Discounts', href: '#shop' },
+            { label: 'Stickers', href: '#shop' },
+            { label: 'Large format', href: '#shop' },
+          ]} />
+          <FooterCol title="Studio" items={[
+            { label: 'About us', href: '#quality' },
+            { label: 'Quality promise', href: '#quality' },
+            { label: 'Sample gallery', href: '#gallery' },
+            { label: 'Reviews', href: '#reviews' },
+          ]} />
+          <FooterCol title="Help" items={[
+            { label: 'FAQ', href: '#faq' },
+            { label: 'Contact', href: '#contact' },
+            { label: 'Shipping', href: '#faq' },
+            { label: 'Returns', href: '#faq' },
+          ]} />
+        </div>
+        <div id="contact" style={{
+          scrollMarginTop: 120,
+          paddingTop: 32,
+          marginBottom: 32,
+          borderTop: '1px solid rgba(251, 247, 241, 0.1)',
+        }}>
+          <div className="label-mono" style={{ color: 'var(--peach)', marginBottom: 14 }}>Contact</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 40px', fontSize: 15 }}>
+            <ContactLink label="Email" text="yq@aznet.sg" href="mailto:yq@aznet.sg" />
+            <ContactLink label="WhatsApp" text="+65 9118 4071" href="https://wa.me/6591184071" external />
+            <ContactLink label="Carousell" text="@YQ_Photo_Services" href="https://carousell.app.link/Mk8Vrne8D7b" external />
+          </div>
         </div>
         <div style={{
           paddingTop: 32,
@@ -332,7 +360,7 @@ function FooterCol({ title, items }) {
       <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {items.map((it, i) => (
           <li key={i}>
-            <a href="#" style={{ color: 'rgba(251, 247, 241, 0.75)', fontSize: 14, transition: 'color 0.2s' }}>{it}</a>
+            <a href={it.href} style={{ color: 'rgba(251, 247, 241, 0.75)', fontSize: 14, transition: 'color 0.2s' }}>{it.label}</a>
           </li>
         ))}
       </ul>
@@ -341,3 +369,16 @@ function FooterCol({ title, items }) {
 }
 
 Object.assign(window, { ProductShowcase, Quality, Reviews, FAQ, Footer });
+
+function ContactLink({ label, text, href, external }) {
+  return (
+    <div>
+      <span style={{ color: 'rgba(251, 247, 241, 0.5)', marginRight: 8 }}>{label}</span>
+      <a href={href}
+         {...(external ? { target: '_blank', rel: 'noopener' } : {})}
+         style={{ color: 'var(--cream)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+        {text}
+      </a>
+    </div>
+  );
+}
